@@ -49,12 +49,14 @@ const Menu = () => {
               <>
               <Nav.Link onClick={() => navigate('/admin/examples')}>Examples</Nav.Link>
               <Nav.Link onClick={() => navigate('/admin/categories')}>Categories</Nav.Link>
+              <Nav.Link onClick={() => navigate('/admin/products')}>Products</Nav.Link>
               </>
               
             ) : (
               <>
               <Nav.Link onClick={() => navigate('/examples')}>Examples</Nav.Link>
               <Nav.Link onClick={() => navigate('/categories')}>Categories</Nav.Link>
+              <Nav.Link onClick={() => navigate('/products')}>Products</Nav.Link>
               </>
               
             )}

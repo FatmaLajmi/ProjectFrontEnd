@@ -4,6 +4,7 @@ import PrivateRoute from './components/privateRoute/PrivateRoute.jsx';
 import NotFoundPage from './pages/customer/notFound/NotFound.jsx';
 import ExamplesAdminPage from './pages/admin/example/Example.jsx';
 import CategoriesAdminPage from './pages/admin/category/Category.jsx';
+import ProductsAdminPage from './pages/admin/product/Product.jsx';
 import './App.css';
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
         {/* Admin route */}
         <Route path="/admin/examples" element={<ExamplesAdminPage />} />
         <Route path="/admin/categories" element={<CategoriesAdminPage />} />
+        <Route path="/admin/products" element={<ProductsAdminPage />} />
 
         {/* Public route */}
         <Route path="*" element={<NotFoundPage />} />
