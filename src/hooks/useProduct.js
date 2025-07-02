@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import axios from 'axios'
-import useCategories from './useCategory'
 
 const BASEURL = process.env.REACT_APP_BASEURL
 
