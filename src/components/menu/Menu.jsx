@@ -51,6 +51,7 @@ const Menu = () => {
               <Nav.Link onClick={() => navigate('/admin/categories')}>Categories</Nav.Link>
               <Nav.Link onClick={() => navigate('/admin/products')}>Products</Nav.Link>
               <Nav.Link onClick={() => navigate('/admin/users')}>Users</Nav.Link>
+              <Nav.Link onClick={() => navigate('/admin/orders')}>Orders</Nav.Link>
               </>
               
             ) : (
@@ -59,6 +60,7 @@ const Menu = () => {
               <Nav.Link onClick={() => navigate('/categories')}>Categories</Nav.Link>
               <Nav.Link onClick={() => navigate('/products')}>Products</Nav.Link>
               <Nav.Link onClick={() => navigate('/users')}>Users</Nav.Link>
+              <Nav.Link onClick={() => navigate('/orders')}>Orders</Nav.Link>
               </>
               
             )}
