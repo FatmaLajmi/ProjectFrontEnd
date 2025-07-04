@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { Button, Alert, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import useCategories from '../../../hooks/useCategory.js';
 import usePagination from '../../../hooks/usePagination.js';
-import { CreateIcon } from '../../../assets/icons/Icons.jsx';  
 import Loader from '../../../components/loader/Loader.jsx';
 import Pagination from '../../../components/pagination/Pagination.jsx';
 import CategoryModal from './components/CategoryModal.jsx';
@@ -48,7 +47,7 @@ const {
                         onClick={() => handleShowModal('create')}
                         disabled={isLoading}
                     >
-                        <CreateIcon />
+                        Add Category
                     </Button>
                 </OverlayTrigger>
 
