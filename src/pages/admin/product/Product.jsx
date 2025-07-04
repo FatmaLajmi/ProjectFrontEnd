@@ -42,17 +42,15 @@ const {
         getAllCategories();
     }, []);
     useEffect(() => {
-        // ESLint might warn about 'fetchProducts' not being in dependencies.
-        // This is the trade-off of not using useCallback for this specific pattern.
         getProductsByCategory(selectedFilterCategory);
-    }, [selectedFilterCategory]); // 'fetchProducts' is implicitly a dependency due to its definition in the same scope
+    }, [selectedFilterCategory]); 
 
 
    return (
         <div className="container mt-4">
             {error && <Alert variant="danger">{error}</Alert>}
 
-            <div className='d-flex justify-content-between align-items-center mb-3'> {/* Added align-items-center for vertical alignment */}
+            <div className='d-flex justify-content-between align-items-center mb-3'> 
                 <h1>Products List</h1>
                 <OverlayTrigger
                     placement="top"
@@ -60,25 +58,25 @@ const {
                 >
                     <Button
                         variant="primary"
-                        onClick={() => handleShowModal('create', null)} // Pass null for new product
+                        onClick={() => handleShowModal('create', null)} 
                         disabled={isLoading}
                     >
-                        <CreateIcon />
+                        Add Product
                     </Button>
                 </OverlayTrigger>
             </div>
 
             {/* Filter Section */}
-            <Row className="mb-4 d-flex align-items-end"> {/* Use Row for layout */}
-                <Col md={4}> {/* Column for the filter dropdown */}
+            <Row className="mb-4 d-flex align-items-end"> 
+                <Col md={4}>
                     <Form.Group controlId="categoryFilter">
                         <Form.Label>Filter by Category:</Form.Label>
                         <Form.Select
                             value={selectedFilterCategory}
                             onChange={(e) => setSelectedFilterCategory(e.target.value)}
-                            disabled={isLoading} // Disable filter while products are loading
+                            disabled={isLoading}
                         >
-                            <option value="">All Categories</option> {/* Option to show all products */}
+                            <option value="">All Categories</option> 
                             {categories.map((category) => (
                                 <option key={category._id} value={category._id}>
                                     {category.name}
@@ -88,8 +86,6 @@ const {
                     </Form.Group>
                 </Col>
                 <Col md={8} className="d-flex justify-content-end align-items-end">
-                    {/* Your "Add New Product" button can go here if it makes sense with layout */}
-                    {/* It's already above, but if you wanted it next to filter, here's an option */}
                 </Col>
             </Row>
 
@@ -98,7 +94,6 @@ const {
                 <Loader />
             ) : (
                 <>
-                    {/* Conditionally render ProductTable or "No products" message */}
                     {currentItems && currentItems.length > 0 ? (
                         <ProductTable
                             products={currentItems}

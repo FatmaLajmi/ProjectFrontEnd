@@ -16,59 +16,55 @@ const ProductModal = ({ show, onHide, action, productData, onInputChange, onSubm
                         <Form.Label>Name</Form.Label>
                         <Form.Control
                             type="text"
-                            name="name" // Important for handling input changes
+                            name="name"
                             placeholder="Enter product name"
-                            value={productData.name || ''} // Ensure value is a string, even if null/undefined
+                            value={productData.name || ''}
                             onChange={onInputChange}
                             required
                             disabled={isLoading}
                         />
                     </Form.Group>
 
-                    {/* Product Description */}
                     <Form.Group controlId="formProductDescription" className="mb-3">
                         <Form.Label>Description</Form.Label>
                         <Form.Control
                             as="textarea"
                             rows={3}
-                            name="description" // Important for handling input changes
+                            name="description" 
                             placeholder="Enter product description"
-                            value={productData.description || ''} // Ensure value is a string
+                            value={productData.description || ''} 
                             onChange={onInputChange}
                             disabled={isLoading}
                         />
                     </Form.Group>
 
-                    {/* Product Price */}
                     <Form.Group controlId="formProductPrice" className="mb-3">
                         <Form.Label>Price</Form.Label>
                         <Form.Control
-                            type="number" // Changed to number type
+                            type="number" 
                             name="price"
                             placeholder="Enter price"
-                            value={productData.price || ''} // Ensure value is a string for input, handle conversion in parent
+                            value={productData.price || ''} 
                             onChange={onInputChange}
                             required
                             min="0"
-                            step="0.01" // Allows for decimal values
+                            step="0.01" 
                             disabled={isLoading}
                         />
                     </Form.Group>
 
-                    {/* Product Image URL */}
                     <Form.Group controlId="formProductImage" className="mb-3">
                         <Form.Label>Image URL</Form.Label>
                         <Form.Control
-                            type="url" // Changed to URL type for image
+                            type="url" 
                             name="image"
                             placeholder="Enter image URL"
-                            value={productData.image || ''} // Ensure value is a string
+                            value={productData.image || ''} 
                             onChange={onInputChange}
                             disabled={isLoading}
                         />
                     </Form.Group>
 
-                    {/* Product Category */}
                     <Form.Group controlId="formProductCategory" className="mb-3">
                         <Form.Label>Category</Form.Label>
                         <Form.Select
@@ -87,14 +83,13 @@ const ProductModal = ({ show, onHide, action, productData, onInputChange, onSubm
                         </Form.Select>
                     </Form.Group>
 
-                    {/* Product Stock */}
                     <Form.Group controlId="formProductStock" className="mb-3">
                         <Form.Label>Stock</Form.Label>
                         <Form.Control
-                            type="number" // Changed to number type
+                            type="number" 
                             name="stock"
                             placeholder="Enter stock quantity"
-                            value={productData.stock || ''} // Ensure value is a string
+                            value={productData.stock || ''} 
                             onChange={onInputChange}
                             required
                             min="0"

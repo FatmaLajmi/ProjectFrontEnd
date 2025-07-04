@@ -150,7 +150,7 @@ const useProducts = () => {
         } catch (err) {
             alert("Error updating product");
         }
-        getProductsByCategory(selectedFilterCategory); // Refresh products after submission
+        getProductsByCategory(selectedFilterCategory);
     }
 
     const handleDeleteProduct = async (id) => {
