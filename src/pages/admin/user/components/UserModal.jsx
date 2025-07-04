@@ -1,7 +1,7 @@
 import { Modal, Button, Form, ButtonGroup } from 'react-bootstrap';
 
 const UserModal = ({ show, onHide, action, userData, onInputChange, onSubmit, isLoading }) => {
-    const modalTitle = action === 'create' ? 'Create User' : 'Update User';
+    const modalTitle = action === 'create' ? 'Create User' : "Update User's Role";
     const submitButtonText = action === 'create' ? 'Create' : 'Update';
 
     return (
@@ -15,29 +15,28 @@ const UserModal = ({ show, onHide, action, userData, onInputChange, onSubmit, is
                         <Form.Label>Name</Form.Label>
                         <Form.Control
                             type="text"
-                            name="name" // Important for handling input changes
+                            name="name" 
                             placeholder="Enter name"
-                            value={userData.name || ''} // Ensure value is not undefined
+                            value={userData.name || ''} 
                             onChange={onInputChange}
                             required
-                            disabled={isLoading}
+                            disabled={isLoading || action === 'update'}
                         />
                     </Form.Group>
 
                     <Form.Group controlId="formUserEmail" className="mb-3">
                         <Form.Label>Email</Form.Label>
                         <Form.Control
-                            type="email" // Use type="email" for better validation
+                            type="email" 
                             name="email"
                             placeholder="Enter email"
                             value={userData.email || ''}
                             onChange={onInputChange}
                             required
-                            disabled={isLoading}
+                            disabled={isLoading || action === 'update'}
                         />
                     </Form.Group>
 
-                    {/* Password field only required for 'create' action */}
                     {action === 'create' && (
                         <Form.Group controlId="formUserPassword" className="mb-3">
                             <Form.Label>Password</Form.Label>
@@ -48,7 +47,7 @@ const UserModal = ({ show, onHide, action, userData, onInputChange, onSubmit, is
                                 value={userData.password || ''}
                                 onChange={onInputChange}
                                 required
-                                disabled={isLoading}
+                                disabled={isLoading || action === 'update'}
                             />
                         </Form.Group>
                     )}
@@ -56,12 +55,12 @@ const UserModal = ({ show, onHide, action, userData, onInputChange, onSubmit, is
                     <Form.Group controlId="formUserImage" className="mb-3">
                         <Form.Label>Image URL</Form.Label>
                         <Form.Control
-                            type="url" // Use type="url" for URL input
+                            type="url"
                             name="image"
                             placeholder="Enter image URL"
                             value={userData.image || ''}
                             onChange={onInputChange}
-                            disabled={isLoading}
+                            disabled={isLoading || action === 'update'}
                         />
                     </Form.Group>
 
@@ -70,7 +69,7 @@ const UserModal = ({ show, onHide, action, userData, onInputChange, onSubmit, is
                             type="checkbox"
                             label="Is Admin?"
                             name="isAdmin"
-                            checked={userData.isAdmin || false} // Ensure value is boolean
+                            checked={userData.isAdmin || false} 
                             onChange={onInputChange}
                             disabled={isLoading}
                         />

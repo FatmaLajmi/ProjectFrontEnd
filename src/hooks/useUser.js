@@ -154,7 +154,7 @@ const useUsers = () => {
         handleCloseModal,
         handleDeleteUser,
         handleInputChange,
-        getUserById
+        getUserById,
     };
 }
 

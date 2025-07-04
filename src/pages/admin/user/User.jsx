@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { Button, Alert, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import useUsers from '../../../hooks/useUser.js';
 import usePagination from '../../../hooks/usePagination.js';
-import { CreateIcon } from '../../../assets/icons/Icons.jsx'; 
 import Loader from '../../../components/loader/Loader.jsx';
 import Pagination from '../../../components/pagination/Pagination.jsx';
 import UserModal from './components/UserModal.jsx';
@@ -38,7 +37,7 @@ const {
 
             <div className='d-flex justify-content-between'>
                 <h1>Users List</h1>
-                <OverlayTrigger
+                {/* <OverlayTrigger
                     placement="top"
                     overlay={<Tooltip id="create-tooltip">  Create a new User </Tooltip>}
                 >
@@ -49,7 +48,7 @@ const {
                     >
                         <CreateIcon />
                     </Button>
-                </OverlayTrigger>
+                </OverlayTrigger> */}
 
             </div>
 
