@@ -1,4 +1,4 @@
-import { Modal, Button, Form, ButtonGroup } from 'react-bootstrap';
+import { Modal, Button, Form, ButtonGroup } from "react-bootstrap";
 
 const OrderModal = ({
   show,
@@ -13,8 +13,8 @@ const OrderModal = ({
   isLoading,
   validStatuses,
 }) => {
-  const modalTitle = action === 'create' ? 'Create Order' : 'Update Order';
-  const submitButtonText = action === 'create' ? 'Create' : 'Update';
+  const modalTitle = action === "create" ? "Create Order" : "Update Order";
+  const submitButtonText = action === "create" ? "Create" : "Update";
 
   return (
     <Modal show={show} onHide={onHide} size="lg">
@@ -23,24 +23,22 @@ const OrderModal = ({
       </Modal.Header>
       <Modal.Body>
         <Form
-          onSubmit={e => {
+          onSubmit={(e) => {
             e.preventDefault();
             onSubmit();
           }}
         >
-          
-          {(orderData.products|| []).map((item, index) => (
+          {(orderData.products || []).map((item, index) => (
             <div key={index} className="mb-3 d-flex gap-2 align-items-center">
-              
               <Form.Label>Product</Form.Label>
               <Form.Control
                 type="text"
                 placeholder="Product ID"
                 name={`products[${index}].product.name`}
                 value={item.product?.name}
-                onChange={e => onProductChange(e, index)}
+                onChange={(e) => onProductChange(e, index)}
                 required
-                disabled={isLoading || action === 'update'}
+                disabled={isLoading || action === "update"}
               />
               <Form.Label>Quantity</Form.Label>
               <Form.Control
@@ -49,9 +47,9 @@ const OrderModal = ({
                 placeholder="Quantity"
                 name={`products[${index}].quantity`}
                 value={item.quantity}
-                onChange={e => onProductChange(e, index)}
+                onChange={(e) => onProductChange(e, index)}
                 required
-                disabled={isLoading || action === 'update'}
+                disabled={isLoading || action === "update"}
               />
               {/* <Button
                 variant="danger"
@@ -76,7 +74,7 @@ const OrderModal = ({
               value={orderData.totalPrice}
               onChange={onInputChange}
               required
-              disabled={isLoading || action === 'update'}
+              disabled={isLoading || action === "update"}
             />
           </Form.Group>
 
@@ -89,7 +87,7 @@ const OrderModal = ({
               required
               disabled={isLoading}
             >
-              {validStatuses.map(status => (
+              {validStatuses.map((status) => (
                 <option key={status} value={status}>
                   {status.charAt(0).toUpperCase() + status.slice(1)}
                 </option>

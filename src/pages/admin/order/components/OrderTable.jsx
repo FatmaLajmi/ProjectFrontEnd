@@ -1,5 +1,5 @@
-import { Table, Button } from 'react-bootstrap';
-import { EditIcon, DeleteIcon } from '../../../../assets/icons/Icons.jsx';
+import { Table, Button } from "react-bootstrap";
+import { EditIcon, DeleteIcon } from "../../../../assets/icons/Icons.jsx";
 
 const OrderTable = ({ orders, onEdit, onDelete }) => {
   return (
@@ -7,7 +7,6 @@ const OrderTable = ({ orders, onEdit, onDelete }) => {
       <thead>
         <tr>
           <th>User</th>
-          <th># Products</th>
           <th>Total Price</th>
           <th>Status</th>
           <th>Created At</th>
@@ -16,25 +15,21 @@ const OrderTable = ({ orders, onEdit, onDelete }) => {
       </thead>
       <tbody>
         {orders && orders.length > 0 ? (
-          orders.map(order => (
+          orders.map((order) => (
             <tr key={order._id}>
-              <td>{order.user?.name || 'N/A'}</td>
-              <td>{order.products?.length || 0}</td>
+              <td>{order.user?.name || "N/A"}</td>
               <td>{order.totalPrice}</td>
               <td>{order.status}</td>
               <td>{new Date(order.createdAt).toLocaleDateString()}</td>
               <td>
                 <Button
                   variant="warning"
-                  onClick={() => onEdit('update', order)}
+                  onClick={() => onEdit("update", order)}
                   className="me-2"
                 >
                   <EditIcon />
                 </Button>
-                <Button
-                  variant="danger"
-                  onClick={() => onDelete(order._id)}
-                >
+                <Button variant="danger" onClick={() => onDelete(order._id)}>
                   <DeleteIcon />
                 </Button>
               </td>
@@ -42,7 +37,9 @@ const OrderTable = ({ orders, onEdit, onDelete }) => {
           ))
         ) : (
           <tr>
-            <td colSpan="6" className="text-center">No orders found.</td>
+            <td colSpan="6" className="text-center">
+              No orders found.
+            </td>
           </tr>
         )}
       </tbody>

@@ -1,15 +1,14 @@
-import { useEffect } from 'react';
-import { Button, Alert, OverlayTrigger, Tooltip } from 'react-bootstrap';
-import useOrders from '../../../hooks/useOrder.js';
-import usePagination from '../../../hooks/usePagination.js';
-import Loader from '../../../components/loader/Loader.jsx';
-import Pagination from '../../../components/pagination/Pagination.jsx';
-import OrderModal from './components/OrderModal.jsx';
-import OrderTable from './components/OrderTable.jsx';
-import { useNavigate } from 'react-router-dom';
+import { useEffect } from "react";
+import { Button, Alert, OverlayTrigger, Tooltip } from "react-bootstrap";
+import useOrders from "../../../hooks/useOrder.js";
+import usePagination from "../../../hooks/usePagination.js";
+import Loader from "../../../components/loader/Loader.jsx";
+import Pagination from "../../../components/pagination/Pagination.jsx";
+import OrderModal from "./components/OrderModal.jsx";
+import OrderTable from "./components/OrderTable.jsx";
+import { useNavigate } from "react-router-dom";
 
 const OrdersPage = () => {
-
   const {
     orders,
     orderData,
@@ -23,11 +22,11 @@ const OrdersPage = () => {
     handleCloseModal,
     handleDeleteOrder,
     handleInputChange,
-    handleRemoveProduct
+    handleRemoveProduct,
   } = useOrders();
 
   const { currentPage, currentItems, totalPages, handlePageChange } =
-  usePagination(orders, 10);
+    usePagination(orders, 10);
 
   useEffect(() => {
     getAllOrders();
@@ -46,7 +45,7 @@ const OrdersPage = () => {
         >
           <Button
             variant="primary"
-            onClick={() => navigate('/')}
+            onClick={() => navigate("/")}
             disabled={isLoading}
           >
             Create order
@@ -81,7 +80,7 @@ const OrdersPage = () => {
             onSubmit={handleSubmitForm}
             removeProduct={handleRemoveProduct}
             isLoading={isLoading}
-            validStatuses={['pending', 'shipped', 'delivered', 'canceled']}
+            validStatuses={["pending", "shipped", "delivered", "canceled"]}
           />
         </>
       )}
