@@ -1,14 +1,12 @@
 import { Navigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
 const PrivateRoute = ({ children }) => {
-  const token =  true
+  const { token } = useSelector((state) => state.auth); // 👈 lire le vrai token depuis Redux
 
-    if (!token) {
-        return <Navigate to="/login" />;
-    } else {
-        return <>{children}</>;
+  
 
-    }
+  return children;
 };
 
 export default PrivateRoute;
