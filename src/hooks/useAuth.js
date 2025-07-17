@@ -1,5 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 import { login, signup, logout, resetAuthState } from "../redux/auth/auth.slice";
+import { useEffect } from "react";
 
 const useAuth = () => {
   const dispatch = useDispatch();
@@ -7,6 +8,25 @@ const useAuth = () => {
   const { user, token, isLoading, isError, isSuccess, message } = useSelector(
     (state) => state.auth
   );
+
+useEffect(() => {
+  const checkAuthState = () => {
+    try {
+      const storedUser = localStorage.getItem("user");
+      const storedToken = localStorage.getItem("token");
+      
+      // If either is missing but Redux thinks we're logged in
+      if ((user && !storedUser) || (token && !storedToken)) {
+        handleLogout();
+      }
+    } catch (error) {
+      console.error("Auth state check failed:", error);
+      handleLogout();
+    }
+  };
+
+  checkAuthState();
+}, []);
 
   // 🔐 Login
   const handleLogin = async (email, password) => {

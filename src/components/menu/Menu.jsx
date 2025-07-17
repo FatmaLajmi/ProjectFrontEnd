@@ -1,17 +1,8 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
-import {
-  Navbar, Nav, Container, Alert, Button,
-  OverlayTrigger, Tooltip, Badge, Modal
-} from 'react-bootstrap';
-import { 
-  LogoutIcon, 
-  ProfileIcon, 
-  ShopIcon,
-  LoginIcon,
-  SignupIcon
-} from "../../assets/icons/Icons.jsx";
+import { Navbar, Nav, Container, Alert, Button, OverlayTrigger, Tooltip, Badge, Modal} from 'react-bootstrap';
+import { LogoutIcon, ProfileIcon, ShopIcon} from "../../assets/icons/Icons.jsx";
 import { truncateText } from '../../assets/utils/helpers.js';
 import useAuth from '../../hooks/useAuth';
 

@@ -1,18 +1,20 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const BASEURL = process.env.REACT_APP_BASEURL;
 
 const useProducts = () => {
   const [products, setProducts] = useState([]);
-  const [productselected, setProductselected] = useState(null);
+  const [productSelected, setProductSelected] = useState(null);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [modalAction, setModalAction] = useState("create");
   const [selectedFilterCategory, setSelectedFilterCategory] = useState("");
+  const navigate = useNavigate();
+
   const [productData, setProductData] = useState({
-    id: "",
     name: "",
     description: "",
     price: "",
@@ -21,34 +23,66 @@ const useProducts = () => {
     stock: "",
   });
 
+  // 🔐 Get user info from localStorage
+  const user = JSON.parse(localStorage.getItem("user"));
+  const isAdmin = user?.isAdmin;
+
+  const handleSessionExpired = (message = "Session expired. Please login again.") => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    alert(message);
+    navigate("/login", { replace: true });
+  };
+
+  const handleAccessDenied = (message = "Access denied. Admins only.") => {
+    alert(message);
+    navigate("/", { replace: true });
+  };
+
+  const getAuthHeader = () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      handleSessionExpired();
+      throw new Error("No token provided");
+    }
+    return { Authorization: `Bearer ${token}` };
+  };
+
+  const handleErrorFromApi = (error, fallbackMessage) => {
+    if (error.response?.status === 401) {
+      handleSessionExpired();
+    } else if (error.response?.status === 403) {
+      handleAccessDenied();
+    } else {
+      setError(error.response?.data?.message || fallbackMessage);
+    }
+    console.error(fallbackMessage, error);
+  };
+
+  // --- API Functions ---
+
   const getAllProducts = async () => {
     try {
       setIsLoading(true);
       const response = await axios.get(`${BASEURL}/products`);
-
       setProducts(response.data);
     } catch (error) {
-      setError(error.response?.data?.message || "Error fetching products");
-      console.error("Error getting all products", error);
+      handleErrorFromApi(error, "Error fetching products");
     } finally {
       setIsLoading(false);
     }
   };
 
   const getProductsByCategory = async (categoryId = "") => {
-    setIsLoading(true);
-    setError(null);
     try {
-      let url = "http://localhost:3000/products";
-      if (categoryId) {
-        url = `http://localhost:3000/products/search?category=${categoryId}`;
-      }
-
-      const productsResponse = await axios.get(url);
-      setProducts(productsResponse.data);
-    } catch (err) {
-      setError(err);
-      console.error("Failed to fetch products:", err);
+      setIsLoading(true);
+      const url = categoryId 
+        ? `${BASEURL}/products/search?category=${categoryId}`
+        : `${BASEURL}/products`;
+      const response = await axios.get(url);
+      setProducts(response.data);
+    } catch (error) {
+      handleErrorFromApi(error, "Error fetching products by category");
     } finally {
       setIsLoading(false);
     }
@@ -58,64 +92,66 @@ const useProducts = () => {
     try {
       setIsLoading(true);
       const response = await axios.get(`${BASEURL}/products/${id}`);
-      setProductselected(response.data);
+      setProductSelected(response.data);
     } catch (error) {
-      setError(
-        error.response?.data?.message || `Error fetching product with id: ${id}`
-      );
-      console.error("Error getting product by id", error);
+      handleErrorFromApi(error, `Error fetching product with id: ${id}`);
     } finally {
       setIsLoading(false);
     }
   };
 
   const createProduct = async (productData) => {
+    if (!user) return handleSessionExpired();
+    if (!isAdmin) return handleAccessDenied();
+
     try {
       setIsLoading(true);
-      const response = await axios.post(`${BASEURL}/products`, productData);
+      const response = await axios.post(`${BASEURL}/products`, productData, {
+        headers: getAuthHeader(),
+      });
       if (response) {
         getAllProducts();
       }
     } catch (error) {
-      setError(error.response?.data?.message || "Error creating product");
-      console.error("Error creating product", error);
+      handleErrorFromApi(error, "Error creating product");
     } finally {
       setIsLoading(false);
     }
   };
 
   const updateProduct = async (id, updatedData) => {
+    if (!user) return handleSessionExpired();
+    if (!isAdmin) return handleAccessDenied();
+
     try {
       setIsLoading(true);
-      const response = await axios.put(
-        `${BASEURL}/products/${id}`,
-        updatedData
-      );
+      const response = await axios.put(`${BASEURL}/products/${id}`, updatedData, {
+        headers: getAuthHeader(),
+      });
       if (response) {
-        setProductselected(response.data.payload);
+        setProductSelected(response.data);
+        getAllProducts();
       }
-      getAllProducts();
     } catch (error) {
-      setError(
-        error.response?.data?.message || `Error updating product with id: ${id}`
-      );
-      console.error("Error updating product", error);
+      handleErrorFromApi(error, `Error updating product with id: ${id}`);
     } finally {
       setIsLoading(false);
     }
   };
 
   const deleteProduct = async (id) => {
+    if (!user) return handleSessionExpired();
+    if (!isAdmin) return handleAccessDenied();
+
     try {
       setIsLoading(true);
-      await axios.delete(`${BASEURL}/products/${id}`);
-      setProductselected(null);
+      await axios.delete(`${BASEURL}/products/${id}`, {
+        headers: getAuthHeader(),
+      });
+      setProductSelected(null);
       getAllProducts();
     } catch (error) {
-      setError(
-        error.response?.data?.message || `Error deleting product with id: ${id}`
-      );
-      console.error("Error deleting product", error);
+      handleErrorFromApi(error, `Error deleting product with id: ${id}`);
     } finally {
       setIsLoading(false);
     }
@@ -127,18 +163,16 @@ const useProducts = () => {
     setModalAction(action);
     if (action === "update" && product) {
       setProductData({
-        id: product._id,
         name: product.name,
         description: product.description,
         price: product.price,
         image: product.image,
-        category: product.category._id,
+        category: product.category?._id || "",
         stock: product.stock,
       });
-      setProductselected(product);
+      setProductSelected(product);
     } else {
       setProductData({
-        id: "",
         name: "",
         description: "",
         price: "",
@@ -146,7 +180,7 @@ const useProducts = () => {
         category: "",
         stock: "",
       });
-      setProductselected(null);
+      setProductSelected(null);
     }
     setShowModal(true);
   };
@@ -154,7 +188,6 @@ const useProducts = () => {
   const handleCloseModal = () => {
     setShowModal(false);
     setProductData({
-      id: "",
       name: "",
       description: "",
       price: "",
@@ -162,7 +195,7 @@ const useProducts = () => {
       category: "",
       stock: "",
     });
-    setProductselected(null);
+    setProductSelected(null);
     setError(null);
   };
 
@@ -175,27 +208,23 @@ const useProducts = () => {
     try {
       if (modalAction === "create") {
         await createProduct(productData);
-      } else if (modalAction === "update" && productselected) {
-        await updateProduct(productselected._id, productData);
+      } else if (modalAction === "update" && productSelected) {
+        await updateProduct(productSelected._id, productData);
       }
       handleCloseModal();
-      getAllProducts();
     } catch (err) {
-      alert("Error updating product");
+      console.error("Error submitting product form", err);
     }
-    getProductsByCategory(selectedFilterCategory);
   };
 
   const handleDeleteProduct = async (id) => {
     if (window.confirm("Are you sure you want to delete this product?")) {
       try {
         await deleteProduct(id);
-        getAllProducts();
       } catch (err) {
-        alert("Error deleting product");
+        console.error("Error deleting product", err);
       }
     }
-    getProductsByCategory(selectedFilterCategory);
   };
 
   return {
@@ -208,13 +237,13 @@ const useProducts = () => {
     selectedFilterCategory,
     setSelectedFilterCategory,
     getAllProducts,
+    getProductsByCategory,
+    getProductById,
     handleSubmitForm,
     handleShowModal,
     handleCloseModal,
     handleDeleteProduct,
     handleInputChange,
-    getProductById,
-    getProductsByCategory,
   };
 };
 

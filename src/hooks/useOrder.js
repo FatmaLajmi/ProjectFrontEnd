@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const BASEURL = process.env.REACT_APP_BASEURL;
@@ -8,10 +9,9 @@ const useOrders = () => {
   const [orderSelected, setOrderSelected] = useState(null);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-
   const [showModal, setShowModal] = useState(false);
-
   const [modalAction, setModalAction] = useState("create");
+  const navigate = useNavigate();
 
   const [orderData, setOrderData] = useState({
     user: "",
@@ -20,78 +20,143 @@ const useOrders = () => {
     status: "pending",
   });
 
+  // 🔐 Get user info from localStorage
+  const user = JSON.parse(localStorage.getItem("user"));
+  const isAdmin = user?.isAdmin;
+
+  const handleSessionExpired = (message = "Session expired. Please login again.") => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    alert(message);
+    navigate("/login", { replace: true });
+  };
+
+  const handleAccessDenied = (message = "Access denied. Admins only.") => {
+    alert(message);
+    navigate("/", { replace: true });
+  };
+
+  const getAuthHeader = () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      handleSessionExpired();
+      throw new Error("No token provided");
+    }
+    return { Authorization: `Bearer ${token}` };
+  };
+
+  const handleErrorFromApi = (error, fallbackMessage) => {
+    if (error.response?.status === 401) {
+      handleSessionExpired();
+    } else if (error.response?.status === 403) {
+      handleAccessDenied();
+    } else {
+      setError(error.response?.data?.message || fallbackMessage);
+    }
+    console.error(fallbackMessage, error);
+  };
+
+  // --- API Functions ---
+
   const getAllOrders = async () => {
+    if (!user) return handleSessionExpired();
+    if (!isAdmin) return handleAccessDenied();
+
     try {
       setIsLoading(true);
-      const response = await axios.get(`${BASEURL}/orders`);
+      const response = await axios.get(`${BASEURL}/orders`, {
+        headers: getAuthHeader(),
+      });
       setOrders(response.data);
     } catch (error) {
-      setError(error.response?.data?.message || "Error fetching orders");
-      console.error("Error getting all orders", error);
+      handleErrorFromApi(error, "Error fetching orders");
     } finally {
       setIsLoading(false);
     }
   };
 
   const getOrderById = async (id) => {
+    if (!user) return handleSessionExpired();
+    if (!isAdmin) return handleAccessDenied();
+
     try {
       setIsLoading(true);
-      const response = await axios.get(`${BASEURL}/orders/${id}`);
+      const response = await axios.get(`${BASEURL}/orders/${id}`, {
+        headers: getAuthHeader(),
+      });
       setOrderSelected(response.data);
     } catch (error) {
-      setError(
-        error.response?.data?.message || `Error fetching order with id: ${id}`
-      );
-      console.error("Error getting order by id", error);
+      handleErrorFromApi(error, `Error fetching order with id: ${id}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getOrdersByUser = async () => {
+    if (!user) return handleSessionExpired();
+
+    try {
+      setIsLoading(true);
+      const response = await axios.get(`${BASEURL}/orders`, {
+        headers: getAuthHeader(),
+      });
+      setOrders(response.data);
+    } catch (error) {
+      handleErrorFromApi(error, "Error fetching user orders");
     } finally {
       setIsLoading(false);
     }
   };
 
   const createOrder = async (orderData) => {
+    if (!user) return handleSessionExpired();
+
     try {
       setIsLoading(true);
-      const response = await axios.post(`${BASEURL}/orders`, orderData);
+      const response = await axios.post(`${BASEURL}/orders`, orderData, {
+        headers: getAuthHeader(),
+      });
       if (response) {
-        getAllOrders();
+        getOrdersByUser(); // Refresh user's orders after creation
       }
     } catch (error) {
-      setError(error.response?.data?.message || "Error creating order");
-      console.error("Error creating order", error);
+      handleErrorFromApi(error, "Error creating order");
     } finally {
       setIsLoading(false);
     }
   };
 
   const updateOrder = async (id, updatedData) => {
+    if (!user) return handleSessionExpired();
+
     try {
       setIsLoading(true);
-      const response = await axios.put(`${BASEURL}/orders/${id}`, updatedData);
+      const response = await axios.put(`${BASEURL}/orders/${id}`, updatedData, {
+        headers: getAuthHeader(),
+      });
       if (response) {
-        setOrderSelected(response.data.payload);
+        setOrderSelected(response.data);
+        getOrdersByUser(); // Refresh orders after update
       }
-      getAllOrders();
     } catch (error) {
-      setError(
-        error.response?.data?.message || `Error updating order with id: ${id}`
-      );
-      console.error("Error updating order", error);
+      handleErrorFromApi(error, `Error updating order with id: ${id}`);
     } finally {
       setIsLoading(false);
     }
   };
 
   const deleteOrder = async (id) => {
+    if (!user) return handleSessionExpired();
+
     try {
       setIsLoading(true);
-      await axios.delete(`${BASEURL}/orders/${id}`);
+      await axios.delete(`${BASEURL}/orders/${id}`, {
+        headers: getAuthHeader(),
+      });
       setOrderSelected(null);
-      getAllOrders();
+      getOrdersByUser(); // Refresh orders after deletion
     } catch (error) {
-      setError(
-        error.response?.data?.message || `Error deleting order with id: ${id}`
-      );
-      console.error("Error deleting order", error);
+      handleErrorFromApi(error, `Error deleting order with id: ${id}`);
     } finally {
       setIsLoading(false);
     }
@@ -112,7 +177,7 @@ const useOrders = () => {
       setOrderSelected(order);
     } else {
       setOrderData({
-        user: "",
+        user: user?._id || "",
         products: [{ product: "", quantity: 1 }],
         totalPrice: 0,
         status: "pending",
@@ -125,7 +190,7 @@ const useOrders = () => {
   const handleCloseModal = () => {
     setShowModal(false);
     setOrderData({
-      user: "",
+      user: user?._id || "",
       products: [{ product: "", quantity: 1 }],
       totalPrice: 0,
       status: "pending",
@@ -147,9 +212,8 @@ const useOrders = () => {
         await updateOrder(orderSelected._id, orderData);
       }
       handleCloseModal();
-      getAllOrders();
     } catch (err) {
-      alert("Error updating order");
+      console.error("Error submitting order form", err);
     }
   };
 
@@ -157,9 +221,8 @@ const useOrders = () => {
     if (window.confirm("Are you sure you want to delete this order?")) {
       try {
         await deleteOrder(id);
-        getAllOrders();
       } catch (err) {
-        alert("Error deleting order");
+        console.error("Error deleting order", err);
       }
     }
   };
@@ -191,12 +254,13 @@ const useOrders = () => {
     showModal,
     modalAction,
     getAllOrders,
+    getOrderById,
+    getOrdersByUser,
     handleSubmitForm,
     handleShowModal,
     handleCloseModal,
     handleDeleteOrder,
     handleInputChange,
-    getOrderById,
     handleRemoveProduct,
   };
 };

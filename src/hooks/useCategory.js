@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const BASEURL = process.env.REACT_APP_BASEURL;
@@ -8,26 +9,60 @@ const useCategories = () => {
   const [categorySelected, setCategorySelected] = useState(null);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-
   const [showModal, setShowModal] = useState(false);
-
   const [modalAction, setModalAction] = useState("create");
+  const navigate = useNavigate();
 
   const [categoryData, setCategoryData] = useState({
-    id: "",
     name: "",
     description: "",
   });
+
+  // 🔐 Get user info from localStorage
+  const user = JSON.parse(localStorage.getItem("user"));
+  const isAdmin = user?.isAdmin;
+
+  const handleSessionExpired = (message = "Session expired. Please login again.") => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    alert(message);
+    navigate("/login", { replace: true });
+  };
+
+  const handleAccessDenied = (message = "Access denied. Admins only.") => {
+    alert(message);
+    navigate("/", { replace: true });
+  };
+
+  const getAuthHeader = () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      handleSessionExpired();
+      throw new Error("No token provided");
+    }
+    return { Authorization: `Bearer ${token}` };
+  };
+
+  const handleErrorFromApi = (error, fallbackMessage) => {
+    if (error.response?.status === 401) {
+      handleSessionExpired();
+    } else if (error.response?.status === 403) {
+      handleAccessDenied();
+    } else {
+      setError(error.response?.data?.message || fallbackMessage);
+    }
+    console.error(fallbackMessage, error);
+  };
+
+  // --- API Functions ---
 
   const getAllCategories = async () => {
     try {
       setIsLoading(true);
       const response = await axios.get(`${BASEURL}/categories`);
       setCategories(response.data);
-      console.log("Response:", response.data);
     } catch (error) {
-      setError(error.response?.data?.message || "Error fetching categories");
-      console.error("Error getting all categories", error);
+      handleErrorFromApi(error, "Error fetching categories");
     } finally {
       setIsLoading(false);
     }
@@ -36,29 +71,29 @@ const useCategories = () => {
   const getCategoryById = async (id) => {
     try {
       setIsLoading(true);
-      const response = await axios.get(`${BASEURL}/categoriess/${id}`);
+      const response = await axios.get(`${BASEURL}/categories/${id}`);
       setCategorySelected(response.data);
     } catch (error) {
-      setError(
-        error.response?.data?.message ||
-          `Error fetching category with id: ${id}`
-      );
-      console.error("Error getting category by id", error);
+      handleErrorFromApi(error, `Error fetching category with id: ${id}`);
     } finally {
       setIsLoading(false);
     }
   };
 
   const createCategory = async (categoryData) => {
+    if (!user) return handleSessionExpired();
+    if (!isAdmin) return handleAccessDenied();
+
     try {
       setIsLoading(true);
-      const response = await axios.post(`${BASEURL}/categories`, categoryData);
+      const response = await axios.post(`${BASEURL}/categories`, categoryData, {
+        headers: getAuthHeader(),
+      });
       if (response) {
         getAllCategories();
       }
     } catch (error) {
-      setError(error.response?.data?.message || "Error creating category");
-      console.error("Error creating category", error);
+      handleErrorFromApi(error, "Error creating category");
       throw error;
     } finally {
       setIsLoading(false);
@@ -66,23 +101,20 @@ const useCategories = () => {
   };
 
   const updateCategory = async (id, updatedData) => {
+    if (!user) return handleSessionExpired();
+    if (!isAdmin) return handleAccessDenied();
+
     try {
       setIsLoading(true);
-      const response = await axios.put(
-        `${BASEURL}/categories/${id}`,
-        updatedData
-      );
+      const response = await axios.put(`${BASEURL}/categories/${id}`, updatedData, {
+        headers: getAuthHeader(),
+      });
       if (response) {
-        setCategorySelected(response.data.payload);
+        setCategorySelected(response.data);
         getAllCategories();
       }
-      
     } catch (error) {
-      setError(
-        error.response?.data?.message ||
-          `Error updating category with id: ${id}`
-      );
-      console.error("Error updating category", error);
+      handleErrorFromApi(error, `Error updating category with id: ${id}`);
       throw error;
     } finally {
       setIsLoading(false);
@@ -90,17 +122,18 @@ const useCategories = () => {
   };
 
   const deleteCategory = async (id) => {
+    if (!user) return handleSessionExpired();
+    if (!isAdmin) return handleAccessDenied();
+
     try {
       setIsLoading(true);
-      await axios.delete(`${BASEURL}/categories/${id}`);
+      await axios.delete(`${BASEURL}/categories/${id}`, {
+        headers: getAuthHeader(),
+      });
       setCategorySelected(null);
       getAllCategories();
     } catch (error) {
-      setError(
-        error.response?.data?.message ||
-          `Error deleting category with id: ${id}`
-      );
-      console.error("Error deleting category", error);
+      handleErrorFromApi(error, `Error deleting category with id: ${id}`);
     } finally {
       setIsLoading(false);
     }
@@ -112,13 +145,12 @@ const useCategories = () => {
     setModalAction(action);
     if (action === "update" && category) {
       setCategoryData({
-        id: category._id,
         name: category.name,
         description: category.description,
       });
       setCategorySelected(category);
     } else {
-      setCategoryData({ id: "", name: "", description: "" });
+      setCategoryData({ name: "", description: "" });
       setCategorySelected(null);
     }
     setShowModal(true);
@@ -126,7 +158,7 @@ const useCategories = () => {
 
   const handleCloseModal = () => {
     setShowModal(false);
-    setCategoryData({ id: "", name: "", description: "" });
+    setCategoryData({ name: "", description: "" });
     setCategorySelected(null);
     setError(null);
   };
@@ -145,9 +177,8 @@ const useCategories = () => {
         await updateCategory(categorySelected._id, categoryData);
       }
       handleCloseModal();
-      getAllCategories();
     } catch (err) {
-      const errorMessage = err.response?.data?.message || "Error updating category";
+      const errorMessage = err.response?.data?.message || "Operation failed";
       setError(errorMessage); 
     }
   };
@@ -156,9 +187,8 @@ const useCategories = () => {
     if (window.confirm("Are you sure you want to delete this category?")) {
       try {
         await deleteCategory(id);
-        getAllCategories();
       } catch (err) {
-        alert("Error deleting category");
+        console.error("Error deleting category", err);
       }
     }
   };
@@ -171,12 +201,12 @@ const useCategories = () => {
     showModal,
     modalAction,
     getAllCategories,
+    getCategoryById,
     handleSubmitForm,
     handleShowModal,
     handleCloseModal,
     handleDeleteCategory,
     handleInputChange,
-    getCategoryById,
   };
 };
 

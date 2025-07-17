@@ -20,6 +20,19 @@ const logout = () => {
   localStorage.removeItem("token");
 };
 
+axios.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response?.status === 401) {
+      // If we get a 401 Unauthorized, clear auth data
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      window.location.reload(); // Force refresh to update UI
+    }
+    return Promise.reject(error);
+  }
+);
+
 const authService = {
   signup,
   login,

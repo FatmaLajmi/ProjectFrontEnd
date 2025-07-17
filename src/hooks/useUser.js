@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const BASEURL = process.env.REACT_APP_BASEURL;
@@ -8,10 +9,10 @@ const useUsers = () => {
   const [userSelected, setUserSelected] = useState(null);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-
   const [showModal, setShowModal] = useState(false);
-
   const [modalAction, setModalAction] = useState("create");
+
+  const navigate = useNavigate();
 
   const [userData, setUserData] = useState({
     id: "",
@@ -22,81 +23,130 @@ const useUsers = () => {
     isAdmin: "",
   });
 
+  // 🔐 Get user info from localStorage
+  const user = JSON.parse(localStorage.getItem("user"));
+  const isAdmin = user?.isAdmin;
+
+  const handleSessionExpired = (message = "Session expired. Please login again.") => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    alert(message);
+    navigate("/login", { replace: true });
+  };
+
+  const handleAccessDenied = (message = "Access denied. Admins only.") => {
+    alert(message);
+    navigate("/", { replace: true });
+  };
+
+  const getAuthHeader = () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      handleSessionExpired();
+      throw new Error("No token provided");
+    }
+    return { Authorization: `Bearer ${token}` };
+  };
+
   const getAllUsers = async () => {
+    if (!user) return handleSessionExpired();
+    if (!isAdmin) return handleAccessDenied();
+
     try {
       setIsLoading(true);
-      const response = await axios.get(`${BASEURL}/users`);
+      const response = await axios.get(`${BASEURL}/users`, {
+        headers: getAuthHeader(),
+      });
       setUsers(response.data);
     } catch (error) {
-      setError(error.response?.data?.message || "Error fetching users");
-      console.error("Error getting all users", error);
+      handleErrorFromApi(error, "Error fetching users");
     } finally {
       setIsLoading(false);
     }
   };
 
   const getUserById = async (id) => {
+    if (!user) return handleSessionExpired();
+
     try {
       setIsLoading(true);
-      const response = await axios.get(`${BASEURL}/users/${id}`);
+      const response = await axios.get(`${BASEURL}/users/${id}`, {
+        headers: getAuthHeader(),
+      });
       setUserSelected(response.data);
     } catch (error) {
-      setError(
-        error.response?.data?.message || `Error fetching user with id: ${id}`
-      );
-      console.error("Error getting user by id", error);
+      handleErrorFromApi(error, `Error fetching user with id: ${id}`);
     } finally {
       setIsLoading(false);
     }
   };
 
   const createUser = async (userData) => {
+    if (!user) return handleSessionExpired();
+    if (!isAdmin) return handleAccessDenied();
+
     try {
       setIsLoading(true);
-      const response = await axios.post(`${BASEURL}/users`, userData);
+      const response = await axios.post(`${BASEURL}/users`, userData, {
+        headers: getAuthHeader(),
+      });
       if (response) {
         getAllUsers();
       }
     } catch (error) {
-      setError(error.response?.data?.message || "Error creating user");
-      console.error("Error creating user", error);
+      handleErrorFromApi(error, "Error creating user");
     } finally {
       setIsLoading(false);
     }
   };
 
   const updateUser = async (id, updatedData) => {
+    if (!user) return handleSessionExpired();
+    if (!isAdmin) return handleAccessDenied();
+
     try {
       setIsLoading(true);
-      const response = await axios.put(`${BASEURL}/users/${id}`, updatedData);
+      const response = await axios.put(`${BASEURL}/users/${id}`, updatedData, {
+        headers: getAuthHeader(),
+      });
       if (response) {
-        setUserSelected(response.data.payload);
+        setUserSelected(response.data);
+        getAllUsers();
       }
-      getAllUsers();
     } catch (error) {
-      setError(
-        error.response?.data?.message || `Error updating user with id: ${id}`
-      );
-      console.error("Error updating user", error);
+      handleErrorFromApi(error, `Error updating user with id: ${id}`);
     } finally {
       setIsLoading(false);
     }
   };
 
   const deleteUser = async (id) => {
+    if (!user) return handleSessionExpired();
+    if (!isAdmin) return handleAccessDenied();
+
     try {
       setIsLoading(true);
-      await axios.delete(`${BASEURL}/users/${id}`);
+      await axios.delete(`${BASEURL}/users/${id}`, {
+        headers: getAuthHeader(),
+      });
       setUserSelected(null);
       getAllUsers();
     } catch (error) {
-      setError(
-        error.response?.data?.message || `Error deleting user with id: ${id}`
-      );
-      console.error("Error deleting user", error);
+      handleErrorFromApi(error, `Error deleting user with id: ${id}`);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleErrorFromApi = (error, fallbackMessage) => {
+    if (error.response?.status === 401) {
+      handleSessionExpired();
+    } else if (error.response?.status === 403) {
+      handleAccessDenied();
+    } else {
+      setError(error.response?.data?.message || fallbackMessage);
+    }
+    console.error(fallbackMessage, error);
   };
 
   // --- Event Handlers ---
@@ -143,7 +193,7 @@ const useUsers = () => {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setUserData({ ...userData, [name]: type === "checkbox" ? checked : value }); 
+    setUserData({ ...userData, [name]: type === "checkbox" ? checked : value });
   };
 
   const handleSubmitForm = async () => {
@@ -156,7 +206,7 @@ const useUsers = () => {
       handleCloseModal();
       getAllUsers();
     } catch (err) {
-      alert("Error updating user");
+      alert("Error submitting user form");
     }
   };
 
@@ -164,7 +214,7 @@ const useUsers = () => {
     if (window.confirm("Are you sure you want to delete this user?")) {
       try {
         await deleteUser(id);
-        getAllUsers(); 
+        getAllUsers();
       } catch (err) {
         alert("Error deleting user");
       }

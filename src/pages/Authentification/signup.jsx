@@ -31,12 +31,9 @@ const Signup = () => {
     image: formData.image, // ici image doit être une URL ou une chaîne base64
   };
 
-    try {
       await signup(data);
       navigate("/");
-    } catch (err) {
-      // déjà géré par le hook
-    }
+
   };
 
   useEffect(() => {
